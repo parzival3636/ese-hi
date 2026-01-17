@@ -25,8 +25,7 @@ const Login = () => {
         setMessage(result.error)
       } else {
         setMessage('Login successful! Redirecting...')
-        // Store user data and session in localStorage
-        localStorage.setItem('user', JSON.stringify(result.user))
+        // Store session token only
         localStorage.setItem('session', JSON.stringify(result.session))
         setTimeout(() => {
           navigate(`/dashboard/${formData.userType}`)

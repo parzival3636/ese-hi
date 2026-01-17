@@ -32,3 +32,102 @@ export const login = async (formData) => {
   })
   return response.json()
 }
+
+export const getUserProfile = async () => {
+  const session = JSON.parse(localStorage.getItem('session') || '{}')
+  const response = await fetch(`${API_BASE_URL}/auth/profile/`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    }
+  })
+  return response.json()
+}
+
+export const getCompanyProjects = async () => {
+  const session = JSON.parse(localStorage.getItem('session') || '{}')
+  const response = await fetch(`${API_BASE_URL}/auth/company/projects/`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    }
+  })
+  return response.json()
+}
+
+export const createProject = async (formData) => {
+  const session = JSON.parse(localStorage.getItem('session') || '{}')
+  const response = await fetch(`${API_BASE_URL}/auth/company/projects/create/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formData)
+  })
+  return response.json()
+}
+
+export const editProject = async (projectId, formData) => {
+  const session = JSON.parse(localStorage.getItem('session') || '{}')
+  const response = await fetch(`${API_BASE_URL}/auth/company/projects/${projectId}/edit/`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formData)
+  })
+  return response.json()
+}
+
+export const getProjectDetails = async (projectId) => {
+  const session = JSON.parse(localStorage.getItem('session') || '{}')
+  const response = await fetch(`${API_BASE_URL}/auth/company/projects/${projectId}/edit/`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    }
+  })
+  return response.json()
+}
+
+export const applyToProject = async (projectId, applicationData) => {
+  const session = JSON.parse(localStorage.getItem('session') || '{}')
+  const response = await fetch(`${API_BASE_URL}/auth/projects/${projectId}/apply/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(applicationData)
+  })
+  return response.json()
+}
+
+export const getProjectApplications = async (projectId) => {
+  const session = JSON.parse(localStorage.getItem('session') || '{}')
+  const response = await fetch(`${API_BASE_URL}/auth/company/projects/${projectId}/applications/`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    }
+  })
+  return response.json()
+}
+
+export const getDevelopers = async () => {
+  const session = JSON.parse(localStorage.getItem('session') || '{}')
+  const response = await fetch(`${API_BASE_URL}/auth/developers/`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    }
+  })
+  return response.json()
+}

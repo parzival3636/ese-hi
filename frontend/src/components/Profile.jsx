@@ -1,181 +1,146 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import './Auth.css'
+import { getUserProfile } from '../services/api'
+import Navbar from './Navbar'
+import './Dashboard.css'
 
 const Profile = () => {
-  const [userType] = useState('developer') // This would come from auth context
-  const [profile, setProfile] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+1234567890',
-    country: 'United States',
-    city: 'New York',
-    title: 'Full Stack Developer',
-    bio: 'Experienced developer with 5+ years in web development',
-    hourlyRate: '50',
-    skills: 'React, Node.js, Python, MongoDB',
-    portfolio: 'https://johndoe.dev',
-    github: 'https://github.com/johndoe',
-    linkedin: 'https://linkedin.com/in/johndoe'
-  })
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
+  const [formData, setFormData] = useState({})
 
-  const handleChange = (e) => {
-    setProfile({...profile, [e.target.name]: e.target.value})
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const result = await getUserProfile()
+        if (result.user) {
+          setUser(result.user)
+          setFormData({
+            first_name: result.user.first_name || '',
+            last_name: result.user.last_name || '',
+            title: '',
+            bio: '',
+            skills: ''
+          })
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [])
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSave = () => {
-    // TODO: Save to backend
-    setEditing(false)
-  }
+  if (loading) return <div className="loading">Loading profile...</div>
+  if (!user) return <div>Please login to view profile</div>
 
   return (
-    <div className="auth-container profile">
-      <div className="auth-form">
+    <div>
+      <Navbar user={user} />
+      <div className="dashboard-container">
         <div className="profile-header">
-          <h2>My Profile</h2>
+          <h1>My Profile</h1>
           <button 
-            className="btn btn-secondary"
+            className="btn btn-primary"
             onClick={() => setEditing(!editing)}
           >
             {editing ? 'Cancel' : 'Edit Profile'}
           </button>
         </div>
-        
+
         <div className="profile-content">
-          <div className="form-section">
+          <div className="profile-section">
             <h3>Basic Information</h3>
             <div className="form-row">
-              <input
-                type="text"
-                name="firstName"
-                placeholder="First Name"
-                value={profile.firstName}
-                onChange={handleChange}
-                disabled={!editing}
-              />
-              <input
-                type="text"
-                name="lastName"
-                placeholder="Last Name"
-                value={profile.lastName}
-                onChange={handleChange}
-                disabled={!editing}
+              <div>
+                <label>First Name</label>
+                <input 
+                  type="text" 
+                  value={editing ? formData.first_name : user.first_name || ''} 
+                  onChange={(e) => handleInputChange('first_name', e.target.value)}
+                  disabled={!editing}
+                />
+              </div>
+              <div>
+                <label>Last Name</label>
+                <input 
+                  type="text" 
+                  value={editing ? formData.last_name : user.last_name || ''} 
+                  onChange={(e) => handleInputChange('last_name', e.target.value)}
+                  disabled={!editing}
+                />
+              </div>
+            </div>
+            <div>
+              <label>Email</label>
+              <input 
+                type="email" 
+                value={user.email || ''} 
+                disabled
               />
             </div>
-            
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={profile.email}
-              onChange={handleChange}
-              disabled={!editing}
-            />
-            
-            <div className="form-row">
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Phone"
-                value={profile.phone}
-                onChange={handleChange}
-                disabled={!editing}
-              />
-              <input
-                type="text"
-                name="country"
-                placeholder="Country"
-                value={profile.country}
-                onChange={handleChange}
-                disabled={!editing}
+            <div>
+              <label>User Type</label>
+              <input 
+                type="text" 
+                value={user.user_type === 'developer' ? 'Developer' : 'Company'} 
+                disabled
               />
             </div>
           </div>
 
-          {userType === 'developer' && (
-            <>
-              <div className="form-section">
-                <h3>Professional Details</h3>
-                <input
-                  type="text"
-                  name="title"
-                  placeholder="Professional Title"
-                  value={profile.title}
-                  onChange={handleChange}
-                  disabled={!editing}
-                />
-                
-                <textarea
-                  name="bio"
-                  placeholder="Professional Bio"
-                  value={profile.bio}
-                  onChange={handleChange}
-                  rows="3"
-                  disabled={!editing}
-                />
-                
-                <input
-                  type="number"
-                  name="hourlyRate"
-                  placeholder="Hourly Rate ($)"
-                  value={profile.hourlyRate}
-                  onChange={handleChange}
-                  disabled={!editing}
-                />
-                
-                <textarea
-                  name="skills"
-                  placeholder="Skills"
-                  value={profile.skills}
-                  onChange={handleChange}
-                  rows="2"
+          {user.user_type === 'developer' && (
+            <div className="profile-section">
+              <h3>Professional Information</h3>
+              <div>
+                <label>Professional Title</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g., Full Stack Developer"
+                  value={editing ? formData.title : ''}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
                   disabled={!editing}
                 />
               </div>
-
-              <div className="form-section">
-                <h3>Portfolio & Links</h3>
-                <input
-                  type="url"
-                  name="portfolio"
-                  placeholder="Portfolio Website"
-                  value={profile.portfolio}
-                  onChange={handleChange}
+              <div>
+                <label>Bio</label>
+                <textarea 
+                  placeholder="Tell clients about yourself..."
+                  rows="4"
+                  value={editing ? formData.bio : ''}
+                  onChange={(e) => handleInputChange('bio', e.target.value)}
                   disabled={!editing}
                 />
-                
-                <div className="form-row">
-                  <input
-                    type="url"
-                    name="github"
-                    placeholder="GitHub Profile"
-                    value={profile.github}
-                    onChange={handleChange}
-                    disabled={!editing}
-                  />
-                  <input
-                    type="url"
-                    name="linkedin"
-                    placeholder="LinkedIn Profile"
-                    value={profile.linkedin}
-                    onChange={handleChange}
-                    disabled={!editing}
-                  />
-                </div>
               </div>
-            </>
+              <div>
+                <label>Skills</label>
+                <input 
+                  type="text" 
+                  placeholder="React, Node.js, Python..."
+                  value={editing ? formData.skills : ''}
+                  onChange={(e) => handleInputChange('skills', e.target.value)}
+                  disabled={!editing}
+                />
+              </div>
+            </div>
           )}
 
           {editing && (
-            <button className="btn btn-primary" onClick={handleSave}>
-              Save Changes
-            </button>
+            <div className="profile-actions">
+              <button className="btn btn-primary">Save Changes</button>
+              <button className="btn btn-secondary" onClick={() => setEditing(false)}>
+                Cancel
+              </button>
+            </div>
           )}
         </div>
-        
-        <Link to={`/dashboard/${userType}`} className="back-home">← Back to Dashboard</Link>
       </div>
     </div>
   )

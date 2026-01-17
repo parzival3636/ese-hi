@@ -32,10 +32,27 @@ const DeveloperRegister = () => {
     availability: 'full-time'
   })
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    return emailRegex.test(email) && email.length >= 6
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setMessage('')
+    
+    if (!validateEmail(formData.email)) {
+      setMessage('Please enter a valid email address')
+      setLoading(false)
+      return
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      setMessage('Passwords do not match')
+      setLoading(false)
+      return
+    }
     
     try {
       const result = await registerDeveloper(formData)
@@ -44,6 +61,10 @@ const DeveloperRegister = () => {
         setMessage(result.error)
       } else {
         setMessage('Registration successful! Redirecting to dashboard...')
+        // Store session token only
+        if (result.session) {
+          localStorage.setItem('session', JSON.stringify(result.session))
+        }
         setTimeout(() => {
           navigate('/dashboard/developer')
         }, 2000)
