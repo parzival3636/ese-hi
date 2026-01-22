@@ -273,35 +273,95 @@ class ProjectAssignmentViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def developer_assignments(self, request):
         """Get all assignments for a developer"""
-        # Get developer ID from query params or session
-        developer_id = request.query_params.get('developer_id')
-        
-        if not developer_id and request.user and request.user.id:
-            developer_id = str(request.user.id)
-        
-        if not developer_id:
-            return Response({'error': 'Developer ID required'}, status=status.HTTP_400_BAD_REQUEST)
-        
         try:
+            # Get authorization header
+            auth_header = request.META.get('HTTP_AUTHORIZATION')
+            if not auth_header:
+                return Response({'error': 'No authorization token'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            token = auth_header.replace('Bearer ', '')
+            
+            # Verify token and get user
+            user_response = self.supabase.auth.get_user(token)
+            if not user_response.user:
+                return Response({'error': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            developer_id = user_response.user.id
+            
+            # Get assignments for this developer
             assignments = self.service.get_developer_assignments(developer_id)
-            return Response(assignments)
+            
+            # Process assignments to add calculated fields
+            processed_assignments = []
+            for assignment in assignments:
+                # Calculate days remaining
+                from datetime import datetime, timezone
+                now = datetime.now(timezone.utc)
+                
+                try:
+                    # Parse datetime strings and ensure they're timezone-aware
+                    figma_deadline_str = assignment['figma_deadline']
+                    submission_deadline_str = assignment['submission_deadline']
+                    
+                    # Remove 'Z' and add timezone info if needed
+                    if figma_deadline_str.endswith('Z'):
+                        figma_deadline_str = figma_deadline_str[:-1] + '+00:00'
+                    if submission_deadline_str.endswith('Z'):
+                        submission_deadline_str = submission_deadline_str[:-1] + '+00:00'
+                    
+                    figma_deadline = datetime.fromisoformat(figma_deadline_str)
+                    submission_deadline = datetime.fromisoformat(submission_deadline_str)
+                    
+                    # Ensure both datetimes are timezone-aware
+                    if figma_deadline.tzinfo is None:
+                        figma_deadline = figma_deadline.replace(tzinfo=timezone.utc)
+                    if submission_deadline.tzinfo is None:
+                        submission_deadline = submission_deadline.replace(tzinfo=timezone.utc)
+                    
+                    figma_days = max(0, (figma_deadline - now).days)
+                    submission_days = max(0, (submission_deadline - now).days)
+                    
+                except Exception as e:
+                    print(f"Error calculating days for assignment {assignment.get('id')}: {e}")
+                    figma_days = 0
+                    submission_days = 0
+                
+                processed_assignments.append({
+                    **assignment,
+                    'figma_days_remaining': figma_days,
+                    'submission_days_remaining': submission_days
+                })
+            
+            return Response(processed_assignments)
         except Exception as e:
+            print(f"Error getting developer assignments: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['get'])
     def company_assignments(self, request):
         """Get all assignments for a company"""
-        # Get company ID from query params or session
-        company_id = request.query_params.get('company_id')
-        
-        if not company_id and request.user and request.user.id:
-            company_id = str(request.user.id)
-        
-        if not company_id:
-            return Response({'error': 'Company ID required'}, status=status.HTTP_400_BAD_REQUEST)
-        
         try:
+            # Get authorization header
+            auth_header = request.META.get('HTTP_AUTHORIZATION')
+            if not auth_header:
+                return Response({'error': 'No authorization token'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            token = auth_header.replace('Bearer ', '')
+            
+            # Verify token and get user
+            user_response = self.supabase.auth.get_user(token)
+            if not user_response.user:
+                return Response({'error': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            company_id = user_response.user.id
+            
+            # Get assignments for this company
             assignments = self.service.get_company_assignments(company_id)
             return Response(assignments)
         except Exception as e:
+            print(f"Error getting company assignments: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

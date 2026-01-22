@@ -4,20 +4,21 @@ Portfolio API views for developer portfolio projects.
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
 import json
 from .supabase_client import get_supabase_client
 
 
 @csrf_exempt
-@require_http_methods(["GET"])
 def get_developer_portfolio(request, developer_id):
     """Get all portfolio projects for a developer."""
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+        
     try:
         supabase = get_supabase_client()
         
         # Get all portfolio projects for the developer
-        result = supabase.table('portfolio_project').select('*').eq(
+        result = supabase.table('portfolio_projects').select('*').eq(
             'developer_id', developer_id
         ).order('featured', desc=True).order('created_at', desc=True).execute()
         
@@ -44,9 +45,17 @@ def get_developer_portfolio(request, developer_id):
 
 
 @csrf_exempt
-@require_http_methods(["POST"])
 def create_portfolio_project(request):
     """Create a new portfolio project."""
+    print(f"Portfolio create called with method: {request.method}")
+    
+    if request.method == 'GET':
+        return JsonResponse({'message': 'Portfolio create endpoint is working'})
+    
+    if request.method != 'POST':
+        print(f"Method not allowed: {request.method}")
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+        
     try:
         data = json.loads(request.body)
         
@@ -78,7 +87,7 @@ def create_portfolio_project(request):
             'featured': data.get('featured', False),
         }
         
-        result = supabase.table('portfolio_project').insert(project_data).execute()
+        result = supabase.table('portfolio_projects').insert(project_data).execute()
         
         if result.data:
             return JsonResponse({
@@ -96,9 +105,10 @@ def create_portfolio_project(request):
 
 
 @csrf_exempt
-@require_http_methods(["PUT"])
 def update_portfolio_project(request, project_id):
     """Update a portfolio project."""
+    if request.method != 'PUT':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
     try:
         data = json.loads(request.body)
         
@@ -117,7 +127,7 @@ def update_portfolio_project(request, project_id):
         developer_id = user_response.user.id
         
         # Verify ownership
-        project_result = supabase.table('portfolio_project').select('developer_id').eq(
+        project_result = supabase.table('portfolio_projects').select('developer_id').eq(
             'id', project_id
         ).execute()
         
@@ -139,7 +149,7 @@ def update_portfolio_project(request, project_id):
         # Remove None values
         update_data = {k: v for k, v in update_data.items() if v is not None}
         
-        result = supabase.table('portfolio_project').update(update_data).eq(
+        result = supabase.table('portfolio_projects').update(update_data).eq(
             'id', project_id
         ).execute()
         
@@ -159,9 +169,10 @@ def update_portfolio_project(request, project_id):
 
 
 @csrf_exempt
-@require_http_methods(["DELETE"])
 def delete_portfolio_project(request, project_id):
     """Delete a portfolio project."""
+    if request.method != 'DELETE':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
     try:
         auth_header = request.headers.get('Authorization')
         if not auth_header:
@@ -178,7 +189,7 @@ def delete_portfolio_project(request, project_id):
         developer_id = user_response.user.id
         
         # Verify ownership
-        project_result = supabase.table('portfolio_project').select('developer_id').eq(
+        project_result = supabase.table('portfolio_projects').select('developer_id').eq(
             'id', project_id
         ).execute()
         
@@ -186,7 +197,7 @@ def delete_portfolio_project(request, project_id):
             return JsonResponse({'error': 'Unauthorized'}, status=403)
         
         # Delete project
-        supabase.table('portfolio_project').delete().eq('id', project_id).execute()
+        supabase.table('portfolio_projects').delete().eq('id', project_id).execute()
         
         return JsonResponse({'message': 'Portfolio project deleted successfully'})
     
@@ -196,14 +207,15 @@ def delete_portfolio_project(request, project_id):
 
 
 @csrf_exempt
-@require_http_methods(["POST"])
 def increment_portfolio_views(request, project_id):
     """Increment view count for a portfolio project."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
     try:
         supabase = get_supabase_client()
         
         # Get current view count
-        result = supabase.table('portfolio_project').select('views_count').eq(
+        result = supabase.table('portfolio_projects').select('views_count').eq(
             'id', project_id
         ).execute()
         
@@ -213,7 +225,7 @@ def increment_portfolio_views(request, project_id):
         current_views = result.data[0].get('views_count', 0)
         
         # Increment view count
-        supabase.table('portfolio_project').update({
+        supabase.table('portfolio_projects').update({
             'views_count': current_views + 1
         }).eq('id', project_id).execute()
         
@@ -222,4 +234,3 @@ def increment_portfolio_views(request, project_id):
     except Exception as e:
         print(f"Increment views error: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
-
