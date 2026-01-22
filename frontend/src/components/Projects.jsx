@@ -375,14 +375,14 @@ const Projects = () => {
                       <input 
                         type="number" 
                         name="budgetMin"
-                        placeholder="Min Budget ($)"
+                        placeholder="Min Budget (Rs)"
                         value={postFormData.budgetMin}
                         onChange={handlePostFormChange}
                       />
                       <input 
                         type="number" 
                         name="budgetMax"
-                        placeholder="Max Budget ($)"
+                        placeholder="Max Budget (Rs)"
                         value={postFormData.budgetMax}
                         onChange={handlePostFormChange}
                       />

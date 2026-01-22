@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+const API_BASE_URL = 'http://127.0.0.1:8000/api'
+
 const CompanyAssignedProjects = () => {
   const navigate = useNavigate()
   const [assignments, setAssignments] = useState([])
@@ -14,7 +16,7 @@ const CompanyAssignedProjects = () => {
     try {
       const session = JSON.parse(localStorage.getItem('session') || '{}')
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/projects/assignments/company_assignments/`,
+        `${API_BASE_URL}/projects/assignments/company_assignments/`,
         {
           headers: {
             'Authorization': `Bearer ${session.access_token}`,

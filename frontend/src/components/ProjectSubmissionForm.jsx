@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
+const API_BASE_URL = 'http://127.0.0.1:8000/api'
+
 const ProjectSubmissionForm = () => {
   const { assignmentId } = useParams()
   const navigate = useNavigate()
@@ -22,7 +24,7 @@ const ProjectSubmissionForm = () => {
     try {
       const session = JSON.parse(localStorage.getItem('session') || '{}')
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/projects/assignments/${assignmentId}/`,
+        `${API_BASE_URL}/projects/assignments/${assignmentId}/`,
         {
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
@@ -108,7 +110,7 @@ const ProjectSubmissionForm = () => {
     try {
       const session = JSON.parse(localStorage.getItem('session') || '{}')
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/projects/assignments/${assignmentId}/submit_project/`,
+        `${API_BASE_URL}/projects/assignments/${assignmentId}/submit_project/`,
         {
           method: 'POST',
           headers: {

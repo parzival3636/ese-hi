@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { getUserProfile, getProjectApplications } from '../services/api'
 import Navbar from './Navbar'
 
+const API_BASE_URL = 'http://127.0.0.1:8000/api'
+
 const ApplicationsView = () => {
   const { projectId } = useParams()
   const navigate = useNavigate()
@@ -37,6 +39,44 @@ const ApplicationsView = () => {
     if (score >= 80) return 'Excellent Match'
     if (score >= 60) return 'Good Match'
     return 'Fair Match'
+  }
+
+  const handleAssignProject = async (applicationId) => {
+    try {
+      const session = JSON.parse(localStorage.getItem('session') || '{}')
+      const response = await fetch(
+        `${API_BASE_URL}/projects/assignments/assign_project/`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            application_id: applicationId
+          })
+        }
+      )
+
+      if (response.ok) {
+        alert('Project assigned successfully!')
+        // Refresh applications list
+        const applicationsResult = await getProjectApplications(projectId)
+        if (applicationsResult.applications) {
+          setApplications(applicationsResult.applications)
+        }
+      } else {
+        try {
+          const data = await response.json()
+          alert(`Error: ${data.error || 'Failed to assign project'}`)
+        } catch (e) {
+          alert(`Error: ${response.status} ${response.statusText}`)
+        }
+      }
+    } catch (error) {
+      console.error('Error assigning project:', error)
+      alert('Failed to assign project: ' + error.message)
+    }
   }
 
   const handleViewProfile = (developerId) => {
@@ -686,7 +726,7 @@ const ApplicationsView = () => {
                   flexWrap: 'wrap'
                 }}>
                   <button
-                    onClick={() => alert('Project assignment feature coming soon!')}
+                    onClick={() => handleAssignProject(application.id)}
                     disabled={application.status !== 'pending'}
                     style={{
                       padding: '1rem 2rem',

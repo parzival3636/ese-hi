@@ -22,16 +22,7 @@ class ProjectAssignmentViewSet(viewsets.ModelViewSet):
     """ViewSet for managing project assignments"""
     queryset = ProjectAssignment.objects.all()
     serializer_class = ProjectAssignmentSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        """Filter assignments based on user role"""
-        user = self.request.user
-        # Company can see assignments they created
-        # Developer can see assignments assigned to them
-        return ProjectAssignment.objects.filter(
-            models.Q(project__company=user) | models.Q(developer=user)
-        )
+    permission_classes = []
     
     @action(detail=False, methods=['post'])
     def assign_project(self, request):
@@ -41,13 +32,6 @@ class ProjectAssignmentViewSet(viewsets.ModelViewSet):
         try:
             application = ProjectApplication.objects.get(id=application_id)
             project = application.project
-            
-            # Verify user is the company
-            if project.company != request.user:
-                return Response(
-                    {'error': 'Only the company can assign projects'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
             
             # Check if already assigned
             if ProjectAssignment.objects.filter(project=project).exists():
@@ -66,10 +50,10 @@ class ProjectAssignmentViewSet(viewsets.ModelViewSet):
             # Create chat
             chat = ProjectChat.objects.create(assignment=assignment)
             
-            # Create congratulations message
+            # Create congratulations message - use project company as sender
             ChatMessage.objects.create(
                 chat=chat,
-                sender=request.user,
+                sender=project.company,
                 message=f"Congratulations! You have been selected for the project '{project.title}'. "
                         f"Please submit your Figma designs within 1 week and the final project within 30 days.",
                 message_type='system'
@@ -327,13 +311,43 @@ class ProjectAssignmentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def developer_assignments(self, request):
         """Get all assignments for a developer"""
-        assignments = ProjectAssignment.objects.filter(developer=request.user)
-        serializer = self.get_serializer(assignments, many=True)
-        return Response(serializer.data)
+        # Get developer ID from query params or session
+        developer_id = request.query_params.get('developer_id')
+        
+        if not developer_id and request.user and request.user.id:
+            developer_id = request.user.id
+        
+        if not developer_id:
+            return Response({'error': 'Developer ID required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        try:
+            developer = User.objects.get(id=developer_id)
+            assignments = ProjectAssignment.objects.filter(developer=developer)
+            serializer = self.get_serializer(assignments, many=True)
+            return Response(serializer.data)
+        except User.DoesNotExist:
+            return Response({'error': 'Developer not found'}, status=status.HTTP_404_NOT_FOUND)
     
     @action(detail=False, methods=['get'])
     def company_assignments(self, request):
         """Get all assignments for a company"""
-        assignments = ProjectAssignment.objects.filter(project__company=request.user)
-        serializer = self.get_serializer(assignments, many=True)
-        return Response(serializer.data)
+        # Get company ID from query params or session
+        company_id = request.query_params.get('company_id')
+        
+        if not company_id and request.user and request.user.id:
+            company_id = request.user.id
+        
+        if not company_id:
+            return Response({'error': 'Company ID required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        try:
+            company = User.objects.get(id=company_id)
+            assignments = ProjectAssignment.objects.filter(project__company=company)
+            serializer = self.get_serializer(assignments, many=True)
+            return Response(serializer.data)
+        except User.DoesNotExist:
+            return Response({'error': 'Company not found'}, status=status.HTTP_404_NOT_FOUND)

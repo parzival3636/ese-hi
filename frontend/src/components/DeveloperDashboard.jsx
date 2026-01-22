@@ -54,6 +54,16 @@ const DeveloperDashboard = () => {
         <div className="dashboard-content">
           <div className="main-content">
             <section className="recent-projects">
+              <h2>Assigned Projects</h2>
+              <div className="project-list">
+                <div className="empty-state">
+                  <p>No assigned projects yet.</p>
+                </div>
+              </div>
+              <Link to="/dashboard/developer/assigned-projects" className="view-all">View All Assigned Projects</Link>
+            </section>
+
+            <section className="recent-projects">
               <h2>Recent Project Applications</h2>
               <div className="project-list">
                 <div className="empty-state">

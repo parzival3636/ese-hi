@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
+const API_BASE_URL = 'http://127.0.0.1:8000/api'
+
 const SubmissionReviewPanel = () => {
   const { assignmentId } = useParams()
   const navigate = useNavigate()
@@ -17,7 +19,7 @@ const SubmissionReviewPanel = () => {
     try {
       const session = JSON.parse(localStorage.getItem('session') || '{}')
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/projects/assignments/${assignmentId}/`,
+        `${API_BASE_URL}/projects/assignments/${assignmentId}/`,
         {
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
@@ -44,7 +46,7 @@ const SubmissionReviewPanel = () => {
     try {
       const session = JSON.parse(localStorage.getItem('session') || '{}')
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/projects/assignments/${assignmentId}/review_submission/`,
+        `${API_BASE_URL}/projects/assignments/${assignmentId}/review_submission/`,
         {
           method: 'POST',
           headers: {

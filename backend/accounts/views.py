@@ -255,7 +255,8 @@ def login(request):
                     },
                     'session': {
                         'access_token': auth_response.session.access_token,
-                        'refresh_token': auth_response.session.refresh_token
+                        'refresh_token': auth_response.session.refresh_token,
+                        'user_id': auth_response.user.id
                     }
                 })
             else:

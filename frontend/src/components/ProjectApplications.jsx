@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { getUserProfile, getProjectApplications } from '../services/api'
 import Navbar from './Navbar'
 import './ProjectApplications.css'
+
+const API_BASE_URL = 'http://127.0.0.1:8000/api'
 
 const ProjectApplications = () => {
   const { projectId } = useParams()
@@ -45,7 +47,7 @@ const ProjectApplications = () => {
     try {
       const session = JSON.parse(localStorage.getItem('session') || '{}')
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/projects/assignments/assign_project/`,
+        `${API_BASE_URL}/projects/assignments/assign_project/`,
         {
           method: 'POST',
           headers: {
