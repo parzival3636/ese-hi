@@ -2,20 +2,22 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-class User(AbstractUser):
-    USER_TYPES = (
-        ('developer', 'Developer/Designer'),
-        ('company', 'Company'),
-    )
+# Custom User model commented out since we're using Supabase Auth
+# class User(AbstractUser):
+#     USER_TYPES = (
+#         ('developer', 'Developer/Designer'),
+#         ('company', 'Company'),
+#     )
     
-    user_type = models.CharField(max_length=20, choices=USER_TYPES)
-    phone = models.CharField(max_length=20, blank=True)
-    country = models.CharField(max_length=100, blank=True)
-    city = models.CharField(max_length=100, blank=True)
-    is_verified = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+#     user_type = models.CharField(max_length=20, choices=USER_TYPES)
+#     phone = models.CharField(max_length=20, blank=True)
+#     country = models.CharField(max_length=100, blank=True)
+#     city = models.CharField(max_length=100, blank=True)
+#     is_verified = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
 
+# Legacy models kept for Django admin compatibility but not used in Supabase-only architecture
 class DeveloperProfile(models.Model):
     EXPERIENCE_LEVELS = (
         ('entry', 'Entry Level (0-2 years)'),
@@ -29,7 +31,8 @@ class DeveloperProfile(models.Model):
         ('contract', 'Contract Only'),
     )
     
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # Using default User model to avoid conflicts
+    user = models.OneToOneField('auth.User', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     bio = models.TextField(blank=True)
     hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -64,7 +67,7 @@ class DeveloperProfile(models.Model):
 
 class PortfolioProject(models.Model):
     """Developer portfolio projects for showcasing work."""
-    developer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='portfolio_projects')
+    developer = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='portfolio_projects')
     title = models.CharField(max_length=200)
     description = models.TextField()
     tech_stack = models.JSONField(default=list)
@@ -99,7 +102,7 @@ class CompanyProfile(models.Model):
         ('nonprofit', 'Non-profit'),
     )
     
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField('auth.User', on_delete=models.CASCADE)
     company_name = models.CharField(max_length=200)
     company_size = models.CharField(max_length=20, choices=COMPANY_SIZES)
     industry = models.CharField(max_length=100)

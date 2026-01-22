@@ -52,16 +52,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'devconnect.wsgi.application'
 
-# Custom User Model
-AUTH_USER_MODEL = 'accounts.User'
-
-# Use SQLite for Django (Supabase via API)
+# Disable Django database since we use Supabase-only architecture
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': ':memory:',
     }
 }
+
+# Use default Django User model to avoid conflicts
+# AUTH_USER_MODEL = 'accounts.User'  # Commented out to use default
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -78,14 +78,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# REST Framework
+# REST Framework - Disable authentication since we use Supabase
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PERMISSION_CLASSES': [],
 }
 
 # CORS

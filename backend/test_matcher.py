@@ -8,7 +8,10 @@ django.setup()
 
 from projects.matcher import get_matcher
 from projects.models import Project, ProjectApplication
-from accounts.models import User, DeveloperProfile
+from accounts.models import DeveloperProfile
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 print("=" * 60)
 print("Testing ML Matcher Integration")

@@ -18,7 +18,9 @@
 # from sentence_transformers import SentenceTransformer
 # from django.conf import settings
 
-# from accounts.models import DeveloperProfile, User
+# from accounts.models import DeveloperProfile
+# from django.contrib.auth import get_user_model
+# User = get_user_model()
 # from projects.models import Project, ProjectApplication
 
 
@@ -417,7 +419,10 @@ from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from django.conf import settings
 
-from accounts.models import DeveloperProfile, User
+from accounts.models import DeveloperProfile
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 from projects.models import Project, ProjectApplication
 
 

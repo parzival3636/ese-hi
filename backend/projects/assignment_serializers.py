@@ -3,7 +3,10 @@ from projects.models import (
     ProjectAssignment, ProjectChat, ChatMessage,
     FigmaDesignSubmission, ProjectSubmission
 )
-from accounts.models import User, DeveloperProfile
+from accounts.models import DeveloperProfile
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class ChatMessageSerializer(serializers.ModelSerializer):
