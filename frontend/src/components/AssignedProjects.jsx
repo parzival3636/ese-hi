@@ -1,15 +1,30 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getUserProfile } from '../services/api'
+import Navbar from './Navbar'
 
 const API_BASE_URL = 'http://127.0.0.1:8000/api'
 
 const AssignedProjects = () => {
   const navigate = useNavigate()
+  const [user, setUser] = useState(null)
   const [assignments, setAssignments] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedAssignment, setSelectedAssignment] = useState(null)
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userResult = await getUserProfile()
+        if (userResult.user) {
+          setUser(userResult.user)
+        }
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error)
+      }
+    }
+
+    fetchData()
     fetchAssignments()
   }, [])
 
@@ -54,7 +69,9 @@ const AssignedProjects = () => {
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div>
+      <Navbar user={user} />
+      <div style={{ padding: '2rem' }}>
       <h2 style={{ color: '#fff', marginBottom: '2rem', fontSize: '1.75rem', fontWeight: '700' }}>
         Assigned Projects
       </h2>
@@ -272,6 +289,7 @@ const AssignedProjects = () => {
           </p>
         </div>
       )}
+      </div>
     </div>
   )
 }

@@ -18,6 +18,7 @@ import ApplicationsView from './components/ApplicationsView'
 import DeveloperProfileView from './components/DeveloperProfileView'
 import AssignedProjects from './components/AssignedProjects'
 import CompanyAssignedProjects from './components/CompanyAssignedProjects'
+import ActiveProjects from './components/ActiveProjects'
 import ProjectChatInterface from './components/ProjectChatInterface'
 import FigmaSubmissionForm from './components/FigmaSubmissionForm'
 import ProjectSubmissionForm from './components/ProjectSubmissionForm'
@@ -39,6 +40,7 @@ function App() {
         <Route path="/dashboard/company/my-projects" element={<MyProjects />} />
         <Route path="/dashboard/company/projects/:projectId/applications" element={<ApplicationsView />} />
         <Route path="/dashboard/company/assigned-projects" element={<CompanyAssignedProjects />} />
+        <Route path="/dashboard/company/active-projects" element={<ActiveProjects />} />
         <Route path="/dashboard/company/find-developers" element={<FindDevelopers />} />
         <Route path="/dashboard/company/payments" element={<PaymentHistory />} />
         <Route path="/dashboard/developer/assigned-projects" element={<AssignedProjects />} />

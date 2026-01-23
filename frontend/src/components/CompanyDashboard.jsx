@@ -6,14 +6,23 @@ import './Dashboard.css'
 
 const CompanyDashboard = () => {
   const [user, setUser] = useState(null)
+  const [stats, setStats] = useState({
+    activeProjects: 0,
+    totalApplications: 0,
+    completedProjects: 0,
+    totalSpent: 0
+  })
+  const [recentProjects, setRecentProjects] = useState([])
+  const [recentApplications, setRecentApplications] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchData = async () => {
       try {
-        const result = await getUserProfile()
-        if (result.user) {
-          setUser(result.user)
+        const userResult = await getUserProfile()
+        if (userResult.user) {
+          setUser(userResult.user)
+          await fetchDashboardData()
         }
       } catch (error) {
         console.error('Failed to fetch user profile:', error)
@@ -22,8 +31,61 @@ const CompanyDashboard = () => {
       }
     }
 
-    fetchUserProfile()
+    fetchData()
   }, [])
+
+  const fetchDashboardData = async () => {
+    try {
+      const session = JSON.parse(localStorage.getItem('session') || '{}')
+      
+      // Fetch company projects
+      const projectsResponse = await fetch('http://127.0.0.1:8000/api/auth/company/projects/', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      })
+      
+      if (projectsResponse.ok) {
+        const projectsData = await projectsResponse.json()
+        const projects = projectsData.projects || []
+        setRecentProjects(projects.slice(0, 3))
+        
+        setStats(prev => ({
+          ...prev,
+          activeProjects: projects.filter(p => p.status === 'open' || p.status === 'active' || p.status === 'published').length,
+          completedProjects: projects.filter(p => p.status === 'completed').length
+        }))
+        
+        // Fetch recent applications for all projects
+        let totalApps = 0
+        const allApplications = []
+        
+        for (const project of projects) {
+          try {
+            const appsResponse = await fetch(`http://127.0.0.1:8000/api/auth/company/projects/${project.id}/applications/`, {
+              headers: { 'Authorization': `Bearer ${session.access_token}` }
+            })
+            
+            if (appsResponse.ok) {
+              const appsData = await appsResponse.json()
+              const apps = appsData.applications || []
+              totalApps += apps.length
+              allApplications.push(...apps)
+            }
+          } catch (error) {
+            console.error(`Failed to fetch applications for project ${project.id}:`, error)
+          }
+        }
+        
+        setStats(prev => ({
+          ...prev,
+          totalApplications: totalApps
+        }))
+        
+        setRecentApplications(allApplications.slice(0, 3))
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error)
+    }
+  }
 
   if (loading) return <div>Loading...</div>
   if (!user) return <div>Please login to continue</div>
@@ -35,19 +97,19 @@ const CompanyDashboard = () => {
         <div className="dashboard-stats">
           <div className="stat-card">
             <h3>Active Projects</h3>
-            <span className="stat-number">0</span>
+            <span className="stat-number">{stats.activeProjects}</span>
           </div>
           <div className="stat-card">
             <h3>Total Applications</h3>
-            <span className="stat-number">0</span>
+            <span className="stat-number">{stats.totalApplications}</span>
           </div>
           <div className="stat-card">
             <h3>Completed Projects</h3>
-            <span className="stat-number">0</span>
+            <span className="stat-number">{stats.completedProjects}</span>
           </div>
           <div className="stat-card">
             <h3>Total Spent</h3>
-            <span className="stat-number">$0</span>
+            <span className="stat-number">${stats.totalSpent}</span>
           </div>
         </div>
 
@@ -56,21 +118,43 @@ const CompanyDashboard = () => {
             <section className="recent-projects">
               <h2>Active Projects</h2>
               <div className="project-list">
-                <div className="empty-state">
-                  <p>No active projects. Post your first project to get started!</p>
-                </div>
+                {recentProjects.length > 0 ? (
+                  recentProjects.filter(p => p.status === 'open' || p.status === 'active' || p.status === 'published').map(project => (
+                    <div key={project.id} className="project-item">
+                      <h4>{project.title}</h4>
+                      <p>Budget: ${project.budget_min} - ${project.budget_max}</p>
+                      <span className={`status ${project.status}`}>{project.status}</span>
+                      <span className="applications-count">{project.applications_count || 0} applications</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="empty-state">
+                    <p>No active projects. Post your first project to get started!</p>
+                  </div>
+                )}
               </div>
-              <Link to="/dashboard/company/post-project" className="view-all">Post a Project</Link>
+              <Link to="/dashboard/company/my-projects" className="view-all">View All Projects</Link>
             </section>
 
             <section className="recent-applications">
               <h2>Recent Applications</h2>
               <div className="application-list">
-                <div className="empty-state">
-                  <p>No applications yet. Post projects to start receiving applications from developers.</p>
-                </div>
+                {recentApplications.length > 0 ? (
+                  recentApplications.map(app => (
+                    <div key={app.id} className="application-item">
+                      <h4>{app.developer_name}</h4>
+                      <p>Applied: {new Date(app.applied_at).toLocaleDateString()}</p>
+                      <span className={`status ${app.status}`}>{app.status}</span>
+                      {app.match_score && <span className="match-score">Match: {app.match_score}%</span>}
+                    </div>
+                  ))
+                ) : (
+                  <div className="empty-state">
+                    <p>No applications yet. Post projects to start receiving applications from developers.</p>
+                  </div>
+                )}
               </div>
-              <Link to="/dashboard/company/post-project" className="view-all">Post Your First Project</Link>
+              <Link to="/dashboard/company/my-projects" className="view-all">View All Applications</Link>
             </section>
           </div>
 

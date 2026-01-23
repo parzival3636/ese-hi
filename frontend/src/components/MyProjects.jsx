@@ -58,14 +58,15 @@ const MyProjects = () => {
       <div className="dashboard-container">
         <div className="profile-header">
           <h1>My Projects</h1>
+          <p>Projects that haven't been assigned yet</p>
           <Link to="/dashboard/company/post-project" className="btn btn-primary">
             Post New Project
           </Link>
         </div>
 
         <div className="projects-grid">
-          {projects.length > 0 ? (
-            projects.map(project => (
+          {projects.filter(project => !project.assigned).length > 0 ? (
+            projects.filter(project => !project.assigned).map(project => (
               <div key={project.id} className="project-card">
                 <h3>{project.title}</h3>
                 <p className="description">{project.description}</p>
@@ -83,12 +84,14 @@ const MyProjects = () => {
                 <p>Applications: {project.applications_count}</p>
                 <p>Posted: {formatDate(project.created_at)}</p>
                 <div className="project-actions">
-                  <button 
-                    className="btn btn-primary"
-                    onClick={() => handleViewApplications(project.id)}
-                  >
-                    View Applications ({project.applications_count})
-                  </button>
+                  {project.applications_count > 0 && (
+                    <button 
+                      className="btn btn-primary"
+                      onClick={() => handleViewApplications(project.id)}
+                    >
+                      View Applications ({project.applications_count})
+                    </button>
+                  )}
                   <button 
                     className="btn btn-secondary"
                     onClick={() => handleEditProject(project.id)}

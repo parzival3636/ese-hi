@@ -50,7 +50,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(10, 10, 15, 0.9) 0%, rgba(0, 123, 255, 0.1) 50%, rgba(118, 75, 162, 0.2) 100%);
+  background: linear-gradient(135deg, rgba(10, 10, 15, 0.9) 0%, rgba(10, 10, 15, 0.8) 100%);
   z-index: -1;
 }
 
@@ -91,6 +91,7 @@
   }
 }
 
+/* FIXED: Removed animated shimmer - static gradient top border instead */
 .auth-form::before {
   content: '';
   position: absolute;
@@ -98,15 +99,8 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #007bff, #764ba2, #007bff);
-  background-size: 200% 100%;
-  animation: shimmer 3s ease-in-out infinite;
+  background: linear-gradient(90deg, #007bff, #764ba2);
   border-radius: 20px 20px 0 0;
-}
-
-@keyframes shimmer {
-  0%, 100% { background-position: -200% 0; }
-  50% { background-position: 200% 0; }
 }
 
 .auth-form h2 {
@@ -143,19 +137,9 @@
   color: #ccc;
 }
 
-.user-type-selector button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(0, 123, 255, 0.2), transparent);
-  transition: left 0.6s;
-}
-
-.user-type-selector button:hover::before {
-  left: 100%;
+/* FIXED: Removed the diagonal moving line animation */
+.user-type-selector button:hover {
+  background: rgba(0, 123, 255, 0.1);
 }
 
 .user-type-selector button.active {
@@ -244,21 +228,7 @@
   box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
 }
 
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.6s;
-}
-
-.btn-primary:hover::before {
-  left: 100%;
-}
-
+/* FIXED: Removed moving shine effect on button */
 .btn-primary:hover {
   background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
   transform: translateY(-3px) scale(1.02);
@@ -349,6 +319,7 @@
     grid-template-columns: 1fr;
   }
 }
+
 .message {
   padding: 12px;
   margin: 15px 0;
@@ -392,6 +363,7 @@
   gap: 20px;
   justify-content: center;
 }
+
 .user-type-selector {
   display: flex;
   gap: 20px;

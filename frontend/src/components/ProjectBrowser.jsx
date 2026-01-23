@@ -7,6 +7,7 @@ const ProjectBrowser = () => {
   const [user, setUser] = useState(null)
   const [projects, setProjects] = useState([])
   const [filteredProjects, setFilteredProjects] = useState([])
+  const [userApplications, setUserApplications] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedProject, setSelectedProject] = useState(null)
   const [selectedTechStack, setSelectedTechStack] = useState('')
@@ -40,6 +41,17 @@ const ProjectBrowser = () => {
             }
           })
           setAllTechStacks(Array.from(techStacks).sort())
+        }
+        
+        // Fetch user's applications
+        const session = JSON.parse(localStorage.getItem('session') || '{}')
+        const appsResponse = await fetch('http://127.0.0.1:8000/api/projects/applications/', {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        })
+        
+        if (appsResponse.ok) {
+          const appsData = await appsResponse.json()
+          setUserApplications(appsData.applications || [])
         }
       } catch (error) {
         console.error('Failed to fetch data:', error)
@@ -75,6 +87,10 @@ const ProjectBrowser = () => {
 
     setFilteredProjects(filtered)
   }, [projects, selectedTechStack, sortOrder])
+
+  const hasApplied = (projectId) => {
+    return userApplications.some(app => app.project_id === projectId)
+  }
 
   const formatBudget = (min, max) => {
     if (min === max) return `$${min}`
@@ -249,12 +265,18 @@ const ProjectBrowser = () => {
                 <p>Duration: {project.estimated_duration}</p>
                 <p>Posted: {formatDate(project.created_at)}</p>
                 <div className="project-actions">
-                  <button 
-                    className="btn btn-primary"
-                    onClick={() => handleApplyClick(project)}
-                  >
-                    Apply Now
-                  </button>
+                  {hasApplied(project.id) ? (
+                    <button className="btn btn-disabled" disabled>
+                      Already Applied
+                    </button>
+                  ) : (
+                    <button 
+                      className="btn btn-primary"
+                      onClick={() => handleApplyClick(project)}
+                    >
+                      Apply Now
+                    </button>
+                  )}
                 </div>
               </div>
             ))

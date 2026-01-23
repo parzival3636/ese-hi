@@ -9,7 +9,7 @@ const AssignProjectButton = ({ applicationId, onAssignSuccess }) => {
     try {
       const session = JSON.parse(localStorage.getItem('session') || '{}')
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/projects/assignments/assign_project/`,
+        `http://127.0.0.1:8000/api/projects/assignments/assign_project/`,
         {
           method: 'POST',
           headers: {

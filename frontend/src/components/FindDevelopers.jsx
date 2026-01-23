@@ -21,7 +21,7 @@ const FindDevelopers = () => {
           setUser(userResult.user)
         }
         
-        const developersResult = await getDevelopers()
+        const developersResult = await fetchRealDevelopers()
         if (developersResult.developers) {
           setDevelopers(developersResult.developers)
         }
@@ -34,6 +34,23 @@ const FindDevelopers = () => {
 
     fetchData()
   }, [])
+
+  const fetchRealDevelopers = async () => {
+    try {
+      const session = JSON.parse(localStorage.getItem('session') || '{}')
+      const response = await fetch('http://127.0.0.1:8000/api/auth/developers/', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        return { developers: data.developers || [] }
+      }
+    } catch (error) {
+      console.error('Failed to fetch developers:', error)
+    }
+    return { developers: [] }
+  }
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target
@@ -85,7 +102,12 @@ const FindDevelopers = () => {
                 </div>
                 <p>Experience: {developer.experience}</p>
                 <div className="project-actions">
-                  <button className="btn btn-primary">View Profile</button>
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => window.open(`/developer/${developer.email}`, '_blank')}
+                  >
+                    View Profile
+                  </button>
                   <button className="btn btn-secondary">Send Message</button>
                 </div>
               </div>

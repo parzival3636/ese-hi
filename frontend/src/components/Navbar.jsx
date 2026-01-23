@@ -41,6 +41,12 @@ const Navbar = ({ user }) => {
               My Projects
             </Link>
             <Link 
+              to="/dashboard/company/active-projects" 
+              className={location.pathname === '/dashboard/company/active-projects' ? 'active' : ''}
+            >
+              Active Projects
+            </Link>
+            <Link 
               to="/dashboard/company/find-developers" 
               className={location.pathname === '/dashboard/company/find-developers' ? 'active' : ''}
             >

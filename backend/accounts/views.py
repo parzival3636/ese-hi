@@ -255,9 +255,16 @@ def get_projects(request):
         try:
             supabase = get_supabase_client()
             
-            # Get all projects that are open for applications from Supabase (simple query)
-            response = supabase.table('projects').select('*').eq('status', 'open').execute()
-            projects = response.data if response.data else []
+            # Get all projects from Supabase (remove status filter temporarily)
+            response = supabase.table('projects').select('*').execute()
+            all_projects = response.data if response.data else []
+            
+            print(f"Total projects in database: {len(all_projects)}")
+            if all_projects:
+                print(f"Sample project statuses: {[p.get('status') for p in all_projects[:3]]}")
+            
+            # Filter for open projects
+            projects = [p for p in all_projects if p.get('status') in ['open', 'active', 'published']]
             
             projects_data = []
             for project in projects:
@@ -643,37 +650,41 @@ def get_developers(request):
         try:
             supabase = get_supabase_client()
             
-            # Get all developer users from Supabase Auth
-            # For now, return mock data since we're using Auth metadata
-            mock_developers = [
-                {
-                    'id': 1,
-                    'name': 'John Doe',
-                    'email': 'john@example.com',
-                    'title': 'Full Stack Developer',
-                    'skills': ['React', 'Node.js', 'Python'],
-                    'experience': '3 years',
-                    'rating': 4.8,
-                    'hourly_rate': 50,
-                    'location': 'New York, USA'
-                },
-                {
-                    'id': 2,
-                    'name': 'Jane Smith',
-                    'email': 'jane@example.com',
-                    'title': 'UI/UX Designer',
-                    'skills': ['Figma', 'Adobe XD', 'React'],
-                    'experience': '5 years',
-                    'rating': 4.9,
-                    'hourly_rate': 60,
-                    'location': 'London, UK'
-                }
-            ]
+            # Get all developer profiles from Supabase
+            profiles_response = supabase.table('developer_profiles').select('*').execute()
+            profiles = profiles_response.data if profiles_response.data else []
             
-            return JsonResponse({'developers': mock_developers})
+            developers_data = []
+            for profile in profiles:
+                try:
+                    # Get user info from auth
+                    user_response = supabase.auth.admin.get_user_by_id(profile['user_id'])
+                    if user_response.user:
+                        user_meta = user_response.user.user_metadata or {}
+                        name = f"{user_meta.get('first_name', '')} {user_meta.get('last_name', '')}".strip()
+                        
+                        developers_data.append({
+                            'id': profile['user_id'],
+                            'name': name or 'Developer',
+                            'email': user_response.user.email,
+                            'title': profile.get('title', 'Developer'),
+                            'skills': profile.get('skills', '').split(',') if profile.get('skills') else [],
+                            'experience': profile.get('experience', 'entry'),
+                            'years_experience': profile.get('years_experience', 0),
+                            'hourly_rate': float(profile.get('hourly_rate', 0)),
+                            'rating': float(profile.get('rating', 0)),
+                            'location': f"{user_meta.get('city', '')}, {user_meta.get('country', '')}".strip(', '),
+                            'availability': profile.get('availability', 'available')
+                        })
+                except Exception as e:
+                    print(f"Error processing developer {profile.get('user_id')}: {e}")
+                    continue
+            
+            return JsonResponse({'developers': developers_data})
             
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            print(f"Get developers error: {str(e)}")
+            return JsonResponse({'developers': [], 'error': str(e)})
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
@@ -684,14 +695,25 @@ def get_developer_profile(request, developer_email):
         try:
             supabase = get_supabase_client()
             
+            print(f"Looking for developer with email: {developer_email}")
+            
             # Get user by email from Supabase Auth
             try:
-                admin_response = supabase.auth.admin.get_user_by_email(developer_email)
-                if not admin_response.user:
-                    return JsonResponse({'error': 'Developer not found'}, status=404)
+                admin_response = supabase.auth.admin.list_users()
+                user = None
                 
-                user = admin_response.user
+                # Find user by email
+                for u in admin_response:
+                    if u.email == developer_email:
+                        user = u
+                        break
+                
+                if not user:
+                    print(f"User not found in auth: {developer_email}")
+                    return JsonResponse({'error': 'Developer not found'}, status=404)
                 user_metadata = user.user_metadata or {}
+                
+                print(f"Found user: {user.id}, type: {user_metadata.get('user_type')}")
                 
                 # Check if user is a developer
                 if user_metadata.get('user_type') != 'developer':
@@ -701,9 +723,11 @@ def get_developer_profile(request, developer_email):
                 profile_response = supabase.table('developer_profiles').select('*').eq('user_id', user.id).execute()
                 
                 if not profile_response.data:
+                    print(f"Profile not found for user: {user.id}")
                     return JsonResponse({'error': 'Developer profile not found'}, status=404)
                 
                 profile = profile_response.data[0]
+                print(f"Found profile: {profile.get('title')}")
                 
                 return JsonResponse({
                     'developer': {
@@ -723,8 +747,8 @@ def get_developer_profile(request, developer_email):
                         'portfolio': profile['portfolio'],
                         'github': profile['github'],
                         'linkedin': profile['linkedin'],
-                        'dribbble': profile['dribbble'],
-                        'behance': profile['behance'],
+                        'dribbble': profile.get('dribbble', ''),
+                        'behance': profile.get('behance', ''),
                         'education': profile['education'],
                         'languages': profile['languages'],
                         'availability': profile['availability'],

@@ -21,7 +21,7 @@ const DeveloperProfileView = () => {
 
         // Fetch developer profile
         const session = JSON.parse(localStorage.getItem('session') || '{}')
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/developer/${developerId}/profile/`, {
+        const response = await fetch(`http://127.0.0.1:8000/api/auth/developer/${developerId}/profile/`, {
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
           }
